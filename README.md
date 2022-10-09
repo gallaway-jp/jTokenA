@@ -1,5 +1,5 @@
 # mecab_android
-A Mecab (Japanese tokenizer) wrapper for the Android operating system written in native c++ and Kotlin
+A MeCab (Japanese tokenizer) wrapper for the Android operating system written in native c++ and Kotlin
 
 ## Installation
 
@@ -23,7 +23,7 @@ val result = tokenizeAsNodes(input, dicDir)
 
 ## Other wrappers
 
-There are alternative Mecab wrappers, such as [fugashi](https://github.com/polm/fugashi/) written in Python.
+There are alternative MeCab wrappers, such as [fugashi](https://github.com/polm/fugashi/) written in Python.
 Please feel free to use what works best in your use case.
 
 ## License and Copyright Notice
