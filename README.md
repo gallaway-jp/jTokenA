@@ -1,5 +1,5 @@
 # mecab_android
-A MeCab (Japanese tokenizer) wrapper for the Android operating system written in native c++ and Kotlin
+A wrapper for MeCab (Japanese tokenizer) written in native c++ and Kotlin for use with the Android operating system
 
 ## Installation
 
