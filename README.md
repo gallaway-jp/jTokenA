@@ -1,4 +1,4 @@
-# mecab_android
+# jTokenA
 A wrapper for MeCab (Japanese tokenizer) written in native c++ and Kotlin for use with the Android operating system
 
 ## Installation
@@ -13,7 +13,7 @@ and passed to either the tokenizeAsString or tokenizeAsNodes functions.
 
 ## Usage (Kotlin)
 ```kotlin
-import com.gmail_colin_gallaway_jp.mecab_android.tokenizeAsNodes
+import com.gmail_colin_gallaway_jp.jTokenA.tokenizeAsNodes
 val input = "太郎は次郎が持っている本を花子に渡した。"
 // Storage read permission will be required
 val dicDir = "/storage/emulated/0/Download/unidic-cwj-3.1.0-full"
@@ -28,7 +28,7 @@ Please feel free to use what works best in your use case.
 
 ## License and Copyright Notice
 
-mecab_android is a MeCab wrapper for the Android operating system and includes modified MeCab 0.996 source code.
+jTokenA is a MeCab wrapper for the Android operating system and includes modified MeCab 0.996 source code.
 MeCab is copyrighted free software by Taku Kudo `<taku@chasen.org>` and Nippon
 Telegraph and Telephone Corporation, and is redistributed under the [BSD
 License](./LICENSE.mecab).
