@@ -1,4 +1,4 @@
-package com.gmail_colin_gallaway_jp.mecab_android
+package com.gmail_colin_gallaway_jp.jTokenA
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.gmail_colin_gallaway_jp.mecab_android", appContext.packageName)
+        assertEquals("com.gmail_colin_gallaway_jp.jTokenA", appContext.packageName)
     }
 }

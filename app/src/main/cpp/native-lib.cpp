@@ -112,12 +112,12 @@ std::vector<jobject> createJNodesVector(JNIEnv *env, Node *nodes, CLASSINFO clas
 
 CLASSINFO getClassInfo(JNIEnv *env, jstring jfeaturesClassName, int featuresCount)
 {
-    jclass nodeClass = env->FindClass("com/gmail_colin_gallaway_jp/mecab_android/Node");
+    jclass nodeClass = env->FindClass("com/gmail_colin_gallaway_jp/jTokenA/Node");
     if(!nodeClass){
         return {0};
     }
     jmethodID nodeID = env->GetMethodID(nodeClass, "<init>",
-                                        "(Ljava/lang/String;Lcom/gmail_colin_gallaway_jp/mecab_android/Features;I)V");
+                                        "(Ljava/lang/String;Lcom/gmail_colin_gallaway_jp/jTokenA/Features;I)V");
     if(!nodeID){
         return {0};
     }
@@ -145,7 +145,7 @@ CLASSINFO getClassInfo(JNIEnv *env, jstring jfeaturesClassName, int featuresCoun
 
 extern "C"
 JNIEXPORT jstring JNICALL
-Java_com_gmail_1colin_1gallaway_1jp_mecab_1android_MainKt_tokenizeText(JNIEnv *env, jobject thiz,
+Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeText(JNIEnv *env, jobject thiz,
                                                                         jstring text,
                                                                         jstring dic_dir,
                                                                         jstring features_class_name,
@@ -173,7 +173,7 @@ Java_com_gmail_1colin_1gallaway_1jp_mecab_1android_MainKt_tokenizeText(JNIEnv *e
 }
 extern "C"
 JNIEXPORT jobject JNICALL
-Java_com_gmail_1colin_1gallaway_1jp_mecab_1android_MainKt_tokenizeTextAsNodes(JNIEnv *env,
+Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeTextAsNodes(JNIEnv *env,
                                                                                jobject thiz,
                                                                                jstring text,
                                                                                jstring dic_dir,

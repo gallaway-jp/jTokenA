@@ -1,10 +1,10 @@
-package com.gmail_colin_gallaway_jp.mecab_android
+package com.gmail_colin_gallaway_jp.jTokenA
 
 import java.lang.RuntimeException
 import java.lang.System.loadLibrary
 
 /**
- * A native method that is implemented by the 'mecab_android' native library,
+ * A native method that is implemented by the 'jTokenA' native library,
  * which is packaged with this application.
  */
 external fun tokenizeText(text: String, dicDir: String, featuresClassName: String, featuresCount: Int): String
@@ -14,7 +14,7 @@ var isMecabLoaded = false
 fun loadMecab(): Boolean{
     if(!isMecabLoaded) {
         try {
-            loadLibrary("mecab_android")
+            loadLibrary("jTokenA")
         } catch (e: RuntimeException) {
             return false
         }

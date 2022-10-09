@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace 'com.gmail_colin_gallaway_jp.mecab_android'
+    namespace 'com.gmail_colin_gallaway_jp.jTokenA'
     compileSdk 32
 
     defaultConfig {
-//        applicationId "com.gmail_colin_gallaway_jp.mecab_android"
+//        applicationId "com.gmail_colin_gallaway_jp.jTokenA"
         minSdk 28
         targetSdk 32
         versionCode 1

@@ -1,4 +1,4 @@
-package com.gmail_colin_gallaway_jp.mecab_android
+package com.gmail_colin_gallaway_jp.jTokenA
 
 open class Features
 
