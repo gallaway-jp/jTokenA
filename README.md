@@ -28,7 +28,7 @@ Please feel free to use what works best in your use case.
 
 ## License and Copyright Notice
 
-mecab_android is a MeCab wrapper for the Android operating system and includes modified Mecab source code.
+mecab_android is a MeCab wrapper for the Android operating system and includes modified MeCab 0.996 source code.
 MeCab is copyrighted free software by Taku Kudo `<taku@chasen.org>` and Nippon
 Telegraph and Telephone Corporation, and is redistributed under the [BSD
 License](./LICENSE.mecab).
