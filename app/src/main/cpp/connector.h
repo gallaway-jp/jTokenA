@@ -55,8 +55,6 @@ public:
         return (lid >= 0 && lid < rsize_ && rid >= 0 && rid < lsize_);
     }
 
-    static bool compile(const char *, const char *);
-
     explicit Connector():
             cmmap_(new Mmap<short>), matrix_(0), lsize_(0), rsize_(0) {}
 

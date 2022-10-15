@@ -64,21 +64,6 @@ void remove_filename(std::string *s) {
         *s = ".";
 }
 
-void remove_pathname(std::string *s) {
-    int len = static_cast<int>(s->size()) - 1;
-    bool ok = false;
-    for (; len >= 0; --len) {
-        if ((*s)[len] == '/')  {
-            ok = true;
-            break;
-        }
-    }
-    if (ok)
-        *s = s->substr(len + 1, s->size() - len);
-    else
-        *s = ".";
-}
-
 void replace_string(std::string *s,
                     const std::string &src,
                     const std::string &dst) {
@@ -86,28 +71,6 @@ void replace_string(std::string *s,
     if (pos != std::string::npos) {
         s->replace(pos, src.size(), dst);
     }
-}
-
-void enum_csv_dictionaries(const char *path,
-                           std::vector<std::string> *dics) {
-    dics->clear();
-
-    DIR *dir = opendir(path);
-    CHECK_DIE(dir) << "no such directory: " << path;
-
-    for (struct dirent *dp = readdir(dir);
-         dp;
-         dp = readdir(dir)) {
-        const std::string tmp = dp->d_name;
-        if (tmp.size() >= 5) {
-            std::string ext = tmp.substr(tmp.size() - 4, 4);
-            toLower(&ext);
-            if (ext == ".csv") {
-                dics->push_back(create_filename(path, tmp));
-            }
-        }
-    }
-    closedir(dir);
 }
 
 bool toLower(std::string *s) {
@@ -358,12 +321,4 @@ uint64_t fingerprint(const char *str, size_t size) {
 
 uint64_t fingerprint(const std::string &str) {
     return fingerprint(str.data(), str.size());
-}
-
-bool file_exists(const char *filename) {
-    std::ifstream ifs(WPATH(filename));
-    if (!ifs) {
-        return false;
-    }
-    return true;
 }

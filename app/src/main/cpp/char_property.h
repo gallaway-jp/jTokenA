@@ -62,8 +62,6 @@ public:
 
     inline CharInfo getCharInfo(size_t id) const { return map_[id]; }
 
-    static bool compile(const char *, const char *, const char*);
-
     CharProperty(): cmmap_(new Mmap<char>), map_(0), charset_(0) {}
     virtual ~CharProperty() { this->close(); }
 

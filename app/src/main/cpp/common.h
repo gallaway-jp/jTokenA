@@ -32,13 +32,10 @@
 #define BOS_KEY                 "BOS/EOS"
 
 #define DEFAULT_MAX_GROUPING_SIZE 24
-
-#define CHAR_PROPERTY_DEF_DEFAULT "DEFAULT 1 0 0\nSPACE   0 1 0\n0x0020 SPACE\n"
 #define UNK_DEF_DEFAULT           "DEFAULT,0,0,0,*\nSPACE,0,0,0,*\n"
 #define MATRIX_DEF_DEFAULT        "1 1\n0 0 0\n"
 
 #define MECAB_DEFAULT_CHARSET "UTF-8"
-#define MECAB_DEFAULT_RC "c:\\Program Files\\mecab\\etc\\mecabrc\\"
 #define DIC_VERSION 102
 #define VERSION "0.996"
 

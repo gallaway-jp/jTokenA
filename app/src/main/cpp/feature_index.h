@@ -40,8 +40,6 @@ public:
 
     static bool convert(const Param &param,
                         const char *text_filename, std::string *output);
-    static bool compile(const Param &param,
-                        const char *text_filename, const char *binary_filename);
 
     explicit FeatureIndex(): feature_freelist_(8192 * 32),
                              char_freelist_(8192 * 32),

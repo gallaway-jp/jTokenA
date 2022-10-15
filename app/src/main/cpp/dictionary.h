@@ -63,10 +63,6 @@ public:
     size_t token_size(const result_type &n) const { return 0xff & n.value; }
     const char  *feature(const Token &t) const { return feature_ + t.feature; }
 
-    static bool compile(const Param &param,
-                        const std::vector<std::string> &dics,
-                        const char *output);  // outputs
-
     static bool assignUserDictionaryCosts(
             const Param &param,
             const std::vector<std::string> &dics,

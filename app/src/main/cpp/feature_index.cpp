@@ -523,16 +523,6 @@ void EncoderFeatureIndex::shrink(size_t freq,
     return;
 }
 
-bool FeatureIndex::compile(const Param &param,
-                           const char* txtfile, const char *binfile) {
-    std::string buf;
-    FeatureIndex::convert(param, txtfile, &buf);
-    std::ofstream ofs(WPATH(binfile), std::ios::binary|std::ios::out);
-    CHECK_DIE(ofs) << "permission denied: " << binfile;
-    ofs.write(buf.data(), buf.size());
-    return true;
-}
-
 bool FeatureIndex::convert(const Param &param,
                            const char* txtfile, std::string *output) {
     std::ifstream ifs(WPATH(txtfile));

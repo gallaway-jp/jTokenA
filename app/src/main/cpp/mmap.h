@@ -1,4 +1,3 @@
-
 // MeCab -- Yet Another Part-of-Speech and Morphological Analyzer
 //
 //
@@ -71,7 +70,6 @@ public:
 
         length = st.st_size;
 
-#if HAVE_MMAP
         int prot = PROT_READ;
     if (flag == O_RDWR) prot |= PROT_WRITE;
     char *p;
@@ -81,11 +79,6 @@ public:
         << "mmap() failed: " << filename;
 
     text = reinterpret_cast<T *>(p);
-#else
-        text = new T[length];
-        CHECK_FALSE(::read(fd, text, length) >= 0)
-                    << "read() failed: " << filename;
-#endif
         ::close(fd);
         fd = -1;
 
@@ -99,19 +92,8 @@ public:
         }
 
         if (text) {
-#ifdef HAVE_MMAP
             ::munmap(reinterpret_cast<char *>(text), length);
-      text = 0;
-#else
-            if (flag == O_RDWR) {
-                int fd2;
-                if ((fd2 = ::open(fileName.c_str(), O_RDWR)) >= 0) {
-                    ::write(fd2, text, length);
-                    ::close(fd2);
-                }
-            }
-            delete [] text;
-#endif
+            text = 0;
         }
 
         text = 0;
