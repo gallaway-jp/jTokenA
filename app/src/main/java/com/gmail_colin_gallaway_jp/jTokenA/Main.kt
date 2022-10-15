@@ -11,7 +11,7 @@ external fun tokenizeText(text: String, dicDir: String, featuresClassName: Strin
 external fun tokenizeTextAsNodes(text: String, dicDir: String, featuresClassName: String, featuresCount: Int): Object
 
 var isMecabLoaded = false
-fun loadMecab(): Boolean{
+private fun loadMecab(): Boolean{
     if(!isMecabLoaded) {
         try {
             loadLibrary("jTokenA")

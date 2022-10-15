@@ -198,33 +198,6 @@ int load_request_type(const Param &param) {
 bool load_dictionary_resource(Param *param) {
     std::string rcfile = param->get<std::string>("rcfile");
 
-    if (rcfile.empty()) {
-        const char *homedir = getenv("HOME");
-        if (homedir) {
-            const std::string s = create_filename(std::string(homedir),
-                                                       ".mecabrc");
-            std::ifstream ifs(WPATH(s.c_str()));
-            if (ifs) {
-                rcfile = s;
-            }
-        }
-    }
-
-    if (rcfile.empty()) {
-        const char *rcenv = getenv("MECABRC");
-        if (rcenv) {
-            rcfile = rcenv;
-        }
-    }
-
-    if (rcfile.empty()) {
-        rcfile = MECAB_DEFAULT_RC;
-    }
-
-    if (!param->load(rcfile.c_str())) {
-        return false;
-    }
-
     std::string dicdir = param->get<std::string>("dicdir");
     if (dicdir.empty()) {
         dicdir = ".";  // current

@@ -12,6 +12,9 @@ Tagger* jCreateTagger(JNIEnv *env, jstring jDicDir)
     std::string arg = "";
 
     const char *nativeDicdir = env->GetStringUTFChars(jDicDir, NULL);
+    if(nativeDicdir == NULL){
+        return NULL;
+    }
     std::string dicdir = nativeDicdir;
     env->ReleaseStringUTFChars(jDicDir, nativeDicdir);
 
@@ -52,58 +55,76 @@ typedef struct _CLASSINFO{
     jmethodID nodeID;
 } CLASSINFO;
 
-std::vector<jobject> createJNodesVector(JNIEnv *env, Node *nodes, CLASSINFO classInfo)
+std::vector<jobject> createJNodesVector(JNIEnv *env, Node *nodes, CLASSINFO classInfo, int nFeatures)
 {
     std::vector<jobject> vector;
     Node *temp = nodes;
     do{
-        if(temp->length > 0) {
-            std::string surface = temp->surface;
-            surface = surface.substr(0, temp->length);
-            jstring jSurface = env->NewStringUTF(surface.c_str());
+        if(temp->length == 0) {
+            temp = temp->next;
+            continue;
+        }
+        std::string surface = temp->surface;
+        surface = surface.substr(0, temp->length);
+        jstring jSurface = env->NewStringUTF(surface.c_str());
 
-            std::vector<jvalue> properties;
-            std::string feature = "";
-            std::string features = temp->feature;
-            for(size_t i = 0; i < features.length(); i++){
-                if (features[i] == ','){
-                    jvalue jVal;
-                    jVal.l = env->NewStringUTF(feature.c_str());
-                    if(jVal.l != NULL) {
-                        properties.push_back(jVal);
-                    }
-                    feature = "";
-                    continue;
-                }
-                else if (features[i] == '\"'){
-                    i++;
-                    size_t end = features.find('\"', i);
-                    if(end == std::string::npos) {
-                        feature.append(features, i);
-                        break;
-                    }
-                    size_t length = end-i;
-                    if(length == 0){
-                        continue;
-                    }
-                    feature.append(features, i, length);
-                    i += length-1;
-                    continue;
-                }
-                feature.append(1, features[i]);
-            }
-            {
+        std::vector<jvalue> properties;
+        std::string feature = "";
+        std::string features = temp->feature;
+        for(size_t i = 0; i < features.length(); i++){
+            if (features[i] == ','){
                 jvalue jVal;
                 jVal.l = env->NewStringUTF(feature.c_str());
                 if(jVal.l != NULL) {
                     properties.push_back(jVal);
                 }
+                feature = "";
+                continue;
             }
-
-            jobject jFeatures = env->NewObjectA(classInfo.featuresClass, classInfo.featuresID,
-                                                (jvalue *) &properties[0]);
-            vector.push_back(env->NewObject(classInfo.nodeClass, classInfo.nodeID, jSurface, jFeatures, temp->length));
+            else if (features[i] == '\"'){
+                i++;
+                size_t end = features.find('\"', i);
+                if(end == std::string::npos) {
+                    feature.append(features, i);
+                    break;
+                }
+                size_t length = end-i;
+                if(length <= 0){
+                    continue;
+                }
+                feature.append(features, i, length);
+                i += length;
+                continue;
+            }
+            feature.append(1, features[i]);
         }
+        {
+            jvalue jVal;
+            jVal.l = env->NewStringUTF(feature.c_str());
+            if(jVal.l != NULL) {
+                properties.push_back(jVal);
+            }
+        }
+        if(properties.size() != nFeatures){
+            for(jvalue property : properties){
+                env->DeleteLocalRef(property.l);
+            }
+            temp = temp->next;
+            continue;
+        }
+
+        jobject jFeatures = env->NewObjectA(classInfo.featuresClass, classInfo.featuresID,
+                                            (jvalue *) &properties[0]);
+        if(jFeatures == NULL) {
+            temp = temp->next;
+            continue;
+        }
+        jobject  jNode = env->NewObject(classInfo.nodeClass, classInfo.nodeID, jSurface, jFeatures, temp->length);
+        if(jNode == NULL) {
+            temp = temp->next;
+            continue;
+        }
+        vector.push_back(jNode);
         temp = temp->next;
     }
     while(temp);
@@ -145,14 +166,11 @@ CLASSINFO getClassInfo(JNIEnv *env, jstring jfeaturesClassName, int featuresCoun
 
 extern "C"
 JNIEXPORT jstring JNICALL
-Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeText(JNIEnv *env, jobject thiz,
+Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeText(JNIEnv *env, jclass thiz,
                                                                         jstring text,
                                                                         jstring dic_dir,
                                                                         jstring features_class_name,
                                                                         jint features_count) {
-    // "/storage/emulated/0/Download/unidic-cwj-3.1.0-full"
-    // "/mnt/user/0/primary/Download/unidic-cwj-3.1.0-full"
-
     Tagger *tagger = jCreateTagger(env, dic_dir);
     if (!tagger) {
         return NULL;
@@ -171,10 +189,11 @@ Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeText(JNIEnv *env, job
     }
     return NULL;
 }
+#include <syslog.h>
 extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeTextAsNodes(JNIEnv *env,
-                                                                               jobject thiz,
+                                                                       jclass thiz,
                                                                                jstring text,
                                                                                jstring dic_dir,
                                                                                jstring features_class_name,
@@ -194,7 +213,7 @@ Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeTextAsNodes(JNIEnv *e
     }
 
     CLASSINFO classInfo = getClassInfo(env, features_class_name, (int)features_count);
-    std::vector<jobject> nodes = createJNodesVector(env, (Node*)result, classInfo);
+    std::vector<jobject> nodes = createJNodesVector(env, (Node*)result, classInfo, features_count);
 
     deleteTagger(tagger);
 
