@@ -6,7 +6,6 @@
 #include "mecab.h"
 #include <string>
 
-const char kUnknownError[] = "Unknown Error";
 const size_t kErrorBufferSize = 256;
 char kErrorBuffer[kErrorBufferSize];
 

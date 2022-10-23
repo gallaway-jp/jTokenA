@@ -22,17 +22,12 @@
 #define UNK_DIC_FILE            "unk.dic"
 #define MATRIX_FILE             "matrix.bin"
 #define CHAR_PROPERTY_FILE      "char.bin"
-#define FEATURE_FILE            "feature.def"
-#define REWRITE_FILE            "rewrite.def"
 #define DICRC                   "dicrc"
 #define BOS_KEY                 "BOS/EOS"
 
 #define DEFAULT_MAX_GROUPING_SIZE 24
-#define UNK_DEF_DEFAULT           "DEFAULT,0,0,0,*\nSPACE,0,0,0,*\n"
-#define MATRIX_DEF_DEFAULT        "1 1\n0 0 0\n"
 
 #define MECAB_DEFAULT_CHARSET "UTF-8"
-#define DIC_VERSION 102
 #define VERSION "0.996"
 
 #define NBEST_MAX 512

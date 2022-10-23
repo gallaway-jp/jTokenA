@@ -47,26 +47,6 @@ int atohex(const char *s) {
     return n;
 }
 
-CharInfo encode(const std::vector<std::string> &c,
-                std::map<std::string, CharInfo> *category) {
-    CHECK_DIE(c.size()) << "category size is empty";
-
-    std::map<std::string, CharInfo>::const_iterator it = category->find(c[0]);
-    CHECK_DIE(it != category->end())
-    << "category [" << c[0] << "] is undefined";
-
-    CharInfo base = it->second;
-    for (size_t i = 0; i < c.size(); ++i) {
-        std::map<std::string, CharInfo>::const_iterator it =
-                category->find(c[i]);
-        CHECK_DIE(it != category->end())
-        << "category [" << c[i] << "] is undefined";
-        base.type += (1 << it->second.default_type);
-    }
-
-    return base;
-}
-
 bool CharProperty::open(const Param &param) {
     const std::string prefix   = param.get<std::string>("dicdir");
     const std::string filename = create_filename(prefix, CHAR_PROPERTY_FILE);

@@ -6,23 +6,12 @@
 #include "common.h"
 #include "connector.h"
 #include "darts.h"
-#include "learner_node.h"
 #include "param.h"
 #include "scoped_ptr.h"
 #include "tokenizer.h"
 #include "utils.h"
 #include "viterbi.h"
 
-
-void inline read_node_info(const Dictionary &dic,
-                           const Token &token,
-                           LearnerNode **node) {
-    (*node)->lcAttr  = token.lcAttr;
-    (*node)->rcAttr  = token.rcAttr;
-    (*node)->posid   = token.posid;
-    (*node)->wcost2  = token.wcost;
-    (*node)->feature = dic.feature(token);
-}
 
 void inline read_node_info(const Dictionary &dic,
                            const Token &token,
@@ -35,7 +24,6 @@ void inline read_node_info(const Dictionary &dic,
 }
 
 template class Tokenizer<Node, Path>;
-template class Tokenizer<LearnerNode, LearnerPath>;
 template Tokenizer<Node, Path>::Tokenizer();
 template void Tokenizer<Node, Path>::close();
 template const DictionaryInfo *Tokenizer<Node, Path>::dictionary_info() const;
@@ -53,19 +41,6 @@ template Node* Tokenizer<Node, Path>::lookup<true>(
         Lattice *) const;
 template bool Tokenizer<Node, Path>::open(const Param &);
 template bool Tokenizer<Node, Path>::open2(const Param &);
-template Tokenizer<LearnerNode, LearnerPath>::Tokenizer();
-template void Tokenizer<LearnerNode, LearnerPath>::close();
-template const DictionaryInfo
-*Tokenizer<LearnerNode, LearnerPath>::dictionary_info() const;
-template LearnerNode * Tokenizer<LearnerNode, LearnerPath>::getEOSNode(
-        Allocator<LearnerNode, LearnerPath> *) const;
-template LearnerNode * Tokenizer<LearnerNode, LearnerPath>::getBOSNode(
-        Allocator<LearnerNode, LearnerPath> *) const;
-template LearnerNode *Tokenizer<LearnerNode, LearnerPath>::lookup<false>(
-        const char *,
-        const char *,
-        Allocator<LearnerNode, LearnerPath> *, Lattice *) const;
-template bool Tokenizer<LearnerNode, LearnerPath>::open(const Param &);
 
 template <typename N, typename P>
 Tokenizer<N, P>::Tokenizer()

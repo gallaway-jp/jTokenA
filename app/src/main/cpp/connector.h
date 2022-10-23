@@ -49,7 +49,6 @@ public:
     short *mutable_matrix() { return &matrix_[0]; }
     const short *matrix() const { return &matrix_[0]; }
 
-    bool openText(const char *filename);
     bool open(const char *filename, const char *mode = "r");
     bool open2(const char *filename, void *env, void *jAssetManager);
 

@@ -48,12 +48,6 @@ private:
 public:
     void free() { li_ = pi_ = 0; }
 
-    T* alloc(T *src) {
-        T* n = alloc(1);
-        *n = *src;
-        return n;
-    }
-
     T* alloc(size_t req = 1) {
         while (li_ < freelist_.size()) {
             if ((pi_ + req) < freelist_[li_].first) {

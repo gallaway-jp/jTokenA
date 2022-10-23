@@ -214,10 +214,6 @@ public:
                                 no_delete_(0), error_(0) {}
     ~DoubleArrayImpl() { clear(); }
 
-    void set_result(value_type& x, value_type r, size_t) const {
-        x = r;
-    }
-
     void set_result(result_pair_type& x, value_type r, size_t l) const {
         x.value = r;
         x.length = l;
@@ -256,43 +252,6 @@ public:
         return result;
     }
 
-    int build(size_t     key_size,
-              key_type   **key,
-              size_t     *length = 0,
-              value_type *value = 0,
-              int (*progress_func)(size_t, size_t) = 0) {
-        if (!key_size || !key) return 0;
-
-        progress_func_ = progress_func;
-        key_           = key;
-        length_        = length;
-        key_size_      = key_size;
-        value_         = value;
-        progress_      = 0;
-
-        resize(8192);
-
-        array_[0].base = 1;
-        next_check_pos_ = 0;
-
-        node_t root_node;
-        root_node.left  = 0;
-        root_node.right = key_size;
-        root_node.depth = 0;
-
-        std::vector <node_t> siblings;
-        fetch(root_node, siblings);
-        insert(siblings);
-
-        size_ += (1 << 8 * sizeof(key_type)) + 1;
-        if (size_ >= alloc_size_) resize(size_);
-
-        delete [] used_;
-        used_ = 0;
-
-        return error_;
-    }
-
     int open(const char *file,
              const char *mode = "rb",
              size_t offset = 0,
@@ -316,64 +275,6 @@ public:
                                 sizeof(unit_t), size_, fp)) return -1;
         std::fclose(fp);
 
-        return 0;
-    }
-
-    int save(const char *file,
-             const char *mode = "wb",
-             size_t offset = 0) {
-        if (!size_) return -1;
-        std::FILE *fp = std::fopen(file, mode);
-        if (!fp) return -1;
-        if (size_ != std::fwrite(reinterpret_cast<unit_t *>(array_),
-                                 sizeof(unit_t), size_, fp))
-            return -1;
-        std::fclose(fp);
-        return 0;
-    }
-
-    int gzopen(const char *file,
-               const char *mode = "rb",
-               size_t offset = 0,
-               size_t size = 0) {
-        std::FILE *fp  = std::fopen(file, mode);
-        if (!fp) return -1;
-        clear();
-
-        size_ = size;
-        if (!size_) {
-            if (-1L != static_cast<long>(std::fseek(fp, -8, SEEK_END))) {
-                char buf[8];
-                if (std::fread(static_cast<char*>(buf),
-                               1, 8, fp) != sizeof(buf)) {
-                    std::fclose(fp);
-                    return -1;
-                }
-                size_ = LG(buf+4);
-                size_ /= sizeof(unit_t);
-            }
-        }
-        std::fclose(fp);
-
-        if (!size_) return -1;
-
-        zlib::gzFile gzfp = zlib::gzopen(file, mode);
-        if (!gzfp) return -1;
-        array_ = new unit_t[size_];
-        if (zlib::gzseek(gzfp, offset, SEEK_SET) != 0) return -1;
-        zlib::gzread(gzfp, reinterpret_cast<unit_t *>(array_),
-                     sizeof(unit_t) * size_);
-        zlib::gzclose(gzfp);
-        return 0;
-    }
-
-    int gzsave(const char *file, const char *mode = "wb",
-               size_t offset = 0) {
-        zlib::gzFile gzfp = zlib::gzopen(file, mode);
-        if (!gzfp) return -1;
-        zlib::gzwrite(gzfp, reinterpret_cast<unit_t *>(array_),
-                      sizeof(unit_t) * size_);
-        zlib::gzclose(gzfp);
         return 0;
     }
 
@@ -452,33 +353,6 @@ public:
         }
 
         return num;
-    }
-
-    value_type traverse(const key_type *key,
-                        size_t &node_pos,
-                        size_t &key_pos,
-                        size_t len = 0) const {
-        if (!len) len = length_func_()(key);
-
-        array_type_  b = array_[node_pos].base;
-        array_u_type_ p;
-
-        for (; key_pos < len; ++key_pos) {
-            p = b +(node_u_type_)(key[key_pos]) + 1;
-            if (static_cast<array_u_type_>(b) == array_[p].check) {
-                node_pos = p;
-                b = array_[p].base;
-            } else {
-                return -2;  // no node
-            }
-        }
-
-        p = b;
-        array_type_ n = array_[p].base;
-        if (static_cast<array_u_type_>(b) == array_[p].check && n < 0)
-            return -n-1;
-
-        return -1;  // found, but no value
     }
 };
 

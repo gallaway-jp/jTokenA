@@ -10,8 +10,6 @@
 #include "char_property.h"
 #include "common.h"
 #include "dictionary.h"
-#include "dictionary_rewriter.h"
-#include "feature_index.h"
 #include "iconv_utils.h"
 #include "mmap.h"
 #include "param.h"
@@ -21,54 +19,6 @@
 #include "asset.h"
 
 const unsigned int DictionaryMagicID = 0xef718f77u;
-
-int toInt(const char *str) {
-    if (!str || std::strlen(str) == 0) {
-        return INT_MAX;
-    }
-    return std::atoi(str);
-}
-
-int calcCost(const std::string &w, const std::string &feature,
-             int factor,
-             DecoderFeatureIndex *fi, DictionaryRewriter *rewriter,
-             CharProperty *property) {
-    CHECK_DIE(fi);
-    CHECK_DIE(rewriter);
-    CHECK_DIE(property);
-
-    LearnerPath path;
-    LearnerNode rnode;
-    LearnerNode lnode;
-    rnode.stat  = lnode.stat = MECAB_NOR_NODE;
-    rnode.rpath = &path;
-    lnode.lpath = &path;
-    path.lnode  = &lnode;
-    path.rnode  = &rnode;
-
-    size_t mblen = 0;
-    const CharInfo cinfo = property->getCharInfo(w.c_str(),
-                                                 w.c_str() + w.size(),
-                                                 &mblen);
-    path.rnode->char_type = cinfo.default_type;
-    std::string ufeature, lfeature, rfeature;
-    rewriter->rewrite2(feature, &ufeature, &lfeature, &rfeature);
-    fi->buildUnigramFeature(&path, ufeature.c_str());
-    fi->calcCost(&rnode);
-    return tocost(rnode.wcost, factor);
-}
-
-int progress_bar_darts(size_t current, size_t total) {
-    return progress_bar("emitting double-array", current, total);
-}
-
-template <typename T1, typename T2>
-struct pair_1st_cmp: public std::binary_function<bool, T1, T2> {
-    bool operator()(const std::pair<T1, T2> &x1,
-                    const std::pair<T1, T2> &x2)  {
-        return x1.first < x2.first;
-    }
-};
 
 bool Dictionary::open(const char *file, const char *mode) {
     close();
@@ -92,9 +42,6 @@ bool Dictionary::open(const char *file, const char *mode) {
                 << "dictionary file is broken: " << file;
 
     read_static<unsigned int>(&ptr, version_);
-    CHECK_FALSE(version_ == DIC_VERSION)
-                << "incompatible version: " << version_;
-
     read_static<unsigned int>(&ptr, type_);
     read_static<unsigned int>(&ptr, lexsize_);
     read_static<unsigned int>(&ptr, lsize_);
@@ -141,9 +88,6 @@ bool Dictionary::open2(const char *file, void *env, void* jAssetManager, const c
     unsigned int dummy;
 
     read_static<unsigned int>(&ptr, magic);
-
-    unsigned int uxor = magic ^ DictionaryMagicID;
-    unsigned int uSize = dmmap_->size();
 
     CHECK_FALSE((magic ^ DictionaryMagicID) == dmmap_->size())
                 << "dictionary file is broken: " << file;

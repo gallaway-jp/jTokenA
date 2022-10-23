@@ -9,14 +9,12 @@
 #include <pthread.h>
 #include <sched.h>
 
-#define MECAB_USE_THREAD 1
 #undef atomic_add
 #undef compare_and_swap
 #undef yield_processor
 #define atomic_add(a, b) __sync_add_and_fetch(a, b)
 #define compare_and_swap(a, b, c)  __sync_val_compare_and_swap(a, b, c)
 #define yield_processor() sched_yield()
-#define HAVE_ATOMIC_OPS 1
 
 class read_write_mutex {
 public:
@@ -74,31 +72,6 @@ public:
     }
 private:
     read_write_mutex *mutex_;
-};
-
-class thread {
-private:
-    pthread_t hnd;
-
-public:
-    static void* wrapper(void *ptr) {
-        thread *p = static_cast<thread *>(ptr);
-        p->run();
-        return 0;
-    }
-
-    virtual void run() {}
-
-    void start() {
-        pthread_create(&hnd, 0, &thread::wrapper,
-                   static_cast<void *>(this));
-    }
-
-    void join() {
-        pthread_join(hnd, 0);
-    }
-
-    virtual ~thread() {}
 };
 
 #endif //MECAB_ANDROID_THREAD_H
