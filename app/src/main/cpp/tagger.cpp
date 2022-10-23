@@ -127,9 +127,11 @@ public:
         return writer_.get();
     }
 
+#ifdef HAVE_ATOMIC_OPS
     read_write_mutex *mutex() const {
     return &mutex_;
   }
+#endif
 
 private:
     Viterbi            *viterbi_;
@@ -137,7 +139,9 @@ private:
     int                 request_type_;
     double              theta_;
 
+#ifdef HAVE_ATOMIC_OPS
     mutable read_write_mutex      mutex_;
+#endif
 };
 
 class TaggerImpl: public Tagger {
@@ -405,6 +409,10 @@ bool ModelImpl::swap(Model *model) {
         setGlobalError("current model is not available");
         return false;
     }
+#ifndef HAVE_ATOMIC_OPS
+    setGlobalError("atomic model replacement is not supported");
+    return false;
+#else
     ModelImpl *m = static_cast<ModelImpl *>(model_data.get());
   if (!m) {
     setGlobalError("Invalid model is passed");
@@ -427,6 +435,7 @@ bool ModelImpl::swap(Model *model) {
   delete current_viterbi;
 
   return true;
+#endif
 }
 
 Tagger *ModelImpl::createTagger() const {

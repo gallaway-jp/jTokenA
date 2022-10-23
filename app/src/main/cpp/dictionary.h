@@ -19,6 +19,7 @@ struct Token {
     unsigned short posid;
     short wcost;
     unsigned int   feature;
+    unsigned int   compound;
 };
 
 class Dictionary {

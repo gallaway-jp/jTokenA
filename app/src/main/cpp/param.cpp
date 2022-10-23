@@ -221,6 +221,7 @@ bool Param::open(const char *arg, const Option *opts) {
     std::strncpy(str.get(), arg, str.size());
     char* ptr[64];
     unsigned int size = 1;
+//    ptr[0] = const_cast<char*>(PACKAGE);
 
     for (char *p = str.get(); *p;) {
         while (isspace(*p)) *p++ = '\0';
@@ -231,4 +232,18 @@ bool Param::open(const char *arg, const Option *opts) {
     }
 
     return open(size, ptr, opts);
+}
+
+int Param::help_version() const {
+    if (get<bool>("help")) {
+        std::cout << help();
+        return 0;
+    }
+
+    if (get<bool>("version")) {
+        std::cout << version();
+        return 0;
+    }
+
+    return 1;
 }

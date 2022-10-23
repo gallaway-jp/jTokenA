@@ -22,6 +22,11 @@ private:
 
 public:
     void clear();
+    void add(const char *l, const char *r);
+    void addBOS(const char *l, const char *r);
+    bool save(const char* lfile,
+              const char* rfile);
+    bool build();
     bool open(const char *lfile,
               const char *rfile,
               Iconv *iconv = 0);

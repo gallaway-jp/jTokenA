@@ -87,6 +87,10 @@ bool load_dictionary_resource(Param *);
 
 bool load_dictionary_resource2(Param *);
 
+bool escape_csv_element(std::string *w);
+
+int  progress_bar(const char* message, size_t current, size_t total);
+
 bool toLower(std::string *);
 
 std::string create_filename(const std::string &path,
@@ -152,7 +156,7 @@ inline size_t tokenize(char *str, const char *del,
     return size;
 }
 
-// continuous run of space is regarded as one space
+// continus run of space is regarded as one space
 template <class Iterator>
 inline size_t tokenize2(char *str, const char *del,
                         Iterator out, size_t max) {
@@ -187,6 +191,16 @@ inline double logsumexp(double x, double y, bool flg) {
     }
 }
 
+inline short int tocost(double d, int n) {
+    static const short max = +32767;
+    static const short min = -32767;
+    return static_cast<short>(std::max<double>(
+            std::min<double>(
+                    -n * d,
+                    static_cast<double>(max)),
+            static_cast<double>(min)) );
+}
+
 inline char getEscapedChar(const char p) {
     switch (p) {
         case '0':  return '\0';
@@ -204,6 +218,10 @@ inline char getEscapedChar(const char p) {
 
     return '\0';  // never be here
 }
+
+// return 64 bit hash
+uint64_t fingerprint(const char *str, size_t size);
+uint64_t fingerprint(const std::string &str);
 
 
 #endif //MECAB_ANDROID_UTILS_H

@@ -29,8 +29,11 @@ add_library( # Sets the name of the library.
         context_id.cpp
         darts.h
         dictionary.cpp
+        dictionary_rewriter.cpp
+        feature_index.cpp
         freelist.h
         iconv_utils.cpp
+        learner_node.h
         mecab.cpp
         mmap.h
         nbest_generator.cpp

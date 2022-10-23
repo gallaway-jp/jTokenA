@@ -14,8 +14,10 @@ private:
     T * ptr_;
     scoped_ptr(scoped_ptr const &);
     scoped_ptr & operator= (scoped_ptr const &);
+    typedef scoped_ptr<T> this_type;
 
 public:
+    typedef T element_type;
     explicit scoped_ptr(T * p = 0): ptr_(p) {}
     virtual ~scoped_ptr() { delete ptr_; }
     void reset(T * p = 0) {
@@ -32,8 +34,10 @@ private:
     T * ptr_;
     scoped_array(scoped_array const &);
     scoped_array & operator= (scoped_array const &);
+    typedef scoped_array<T> this_type;
 
 public:
+    typedef T element_type;
     explicit scoped_array(T * p = 0): ptr_(p) {}
     virtual ~scoped_array() { delete [] ptr_; }
     void reset(T * p = 0) {
@@ -52,8 +56,10 @@ private:
     size_t size_;
     scoped_fixed_array(scoped_fixed_array const &);
     scoped_fixed_array & operator= (scoped_fixed_array const &);
+    typedef scoped_fixed_array<T, N> this_type;
 
 public:
+    typedef T element_type;
     explicit scoped_fixed_array()
             : ptr_(new T[N]), size_(N) {}
     virtual ~scoped_fixed_array() { delete [] ptr_; }
@@ -67,6 +73,9 @@ public:
 class scoped_string: public scoped_array<char> {
 public:
     explicit scoped_string() { reset_string(""); }
+    explicit scoped_string(const std::string &str) {
+        reset_string(str);
+    }
 
     void reset_string(const std::string &str) {
         char *p = new char[str.size() + 1];
