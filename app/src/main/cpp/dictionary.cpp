@@ -18,6 +18,7 @@
 #include "scoped_ptr.h"
 #include "utils.h"
 #include "writer.h"
+#include "asset.h"
 
 const unsigned int DictionaryMagicID = 0xef718f77u;
 
@@ -121,97 +122,60 @@ bool Dictionary::open(const char *file, const char *mode) {
     return true;
 }
 
-void Dictionary::close() {
-    dmmap_->close();
-}
+bool Dictionary::open2(const char *file, void *env, void* jAssetManager, const char *mode) {
+    close();
+    filename_.assign(file);
 
-#define DCONF(file) create_filename(dicdir, std::string(file));
+    CHECK_FALSE(dmmap_->open2(file, env, jAssetManager))
+                << "no such file or directory: " << file;
 
-bool Dictionary::assignUserDictionaryCosts(
-        const Param &param,
-        const std::vector<std::string> &dics,
-        const char *output) {
-    Connector matrix;
-    DictionaryRewriter rewriter;
-    DecoderFeatureIndex fi;
-    ContextID cid;
-    CharProperty property;
+    CHECK_FALSE(dmmap_->size() >= 100)
+                << "dictionary file is broken: " << file;
 
-    const std::string dicdir = param.get<std::string>("dicdir");
+    const char *ptr = dmmap_->begin();
 
-    const std::string matrix_file     = DCONF(MATRIX_DEF_FILE);
-    const std::string matrix_bin_file = DCONF(MATRIX_FILE);
-    const std::string left_id_file    = DCONF(LEFT_ID_FILE);
-    const std::string right_id_file   = DCONF(RIGHT_ID_FILE);
-    const std::string rewrite_file    = DCONF(REWRITE_FILE);
+    unsigned int dsize;
+    unsigned int tsize;
+    unsigned int fsize;
+    unsigned int magic;
+    unsigned int dummy;
 
-    const std::string from = param.get<std::string>("dictionary-charset");
+    read_static<unsigned int>(&ptr, magic);
 
-    const int factor = param.get<int>("cost-factor");
-    CHECK_DIE(factor > 0)   << "cost factor needs to be positive value";
+    unsigned int uxor = magic ^ DictionaryMagicID;
+    unsigned int uSize = dmmap_->size();
 
-    std::string config_charset = param.get<std::string>("config-charset");
-    if (config_charset.empty()) {
-        config_charset = from;
-    }
+    CHECK_FALSE((magic ^ DictionaryMagicID) == dmmap_->size())
+                << "dictionary file is broken: " << file;
 
-    CHECK_DIE(!from.empty()) << "input dictionary charset is empty";
+    read_static<unsigned int>(&ptr, version_);
+    read_static<unsigned int>(&ptr, type_);
+    read_static<unsigned int>(&ptr, lexsize_);
+    read_static<unsigned int>(&ptr, lsize_);
+    read_static<unsigned int>(&ptr, rsize_);
+    read_static<unsigned int>(&ptr, dsize);
+    read_static<unsigned int>(&ptr, tsize);
+    read_static<unsigned int>(&ptr, fsize);
+    read_static<unsigned int>(&ptr, dummy);
 
-    Iconv config_iconv;
-    CHECK_DIE(config_iconv.open(config_charset.c_str(), from.c_str()))
-    << "iconv_open() failed with from=" << config_charset << " to=" << from;
+    charset_ = ptr;
+    ptr += 32;
+    da_.set_array(reinterpret_cast<void *>(const_cast<char*>(ptr)));
 
-    rewriter.open(rewrite_file.c_str(), &config_iconv);
-    CHECK_DIE(fi.open(param)) << "cannot open feature index";
+    ptr += dsize;
 
-    CHECK_DIE(property.open(param));
-    property.set_charset(from.c_str());
+    token_ = reinterpret_cast<const Token *>(ptr);
+    ptr += tsize;
 
-    if (!matrix.openText(matrix_file.c_str()) &&
-        !matrix.open(matrix_bin_file.c_str())) {
-        matrix.set_left_size(1);
-        matrix.set_right_size(1);
-    }
+    feature_ = ptr;
+    ptr += fsize;
 
-    cid.open(left_id_file.c_str(),
-             right_id_file.c_str(), &config_iconv);
-    CHECK_DIE(cid.left_size()  == matrix.left_size() &&
-              cid.right_size() == matrix.right_size())
-    << "Context ID files("
-    << left_id_file
-    << " or "
-    << right_id_file << " may be broken: "
-    << cid.left_size() << " " << matrix.left_size() << " "
-    << cid.right_size() << " " << matrix.right_size();
-
-    std::ofstream ofs(output);
-    CHECK_DIE(ofs) << "permission denied: " << output;
-
-    for (size_t i = 0; i < dics.size(); ++i) {
-        std::ifstream ifs(WPATH(dics[i].c_str()));
-        CHECK_DIE(ifs) << "no such file or directory: " << dics[i];
-        std::cout << "reading " << dics[i] << " ... ";
-        scoped_fixed_array<char, BUF_SIZE> line;
-        while (ifs.getline(line.get(), line.size())) {
-            char *col[8];
-            const size_t n = tokenizeCSV(line.get(), col, 5);
-            CHECK_DIE(n == 5) << "format error: " << line.get();
-            std::string w = col[0];
-            const std::string feature = col[4];
-            const int cost = calcCost(w, feature, factor,
-                                      &fi, &rewriter, &property);
-            std::string ufeature, lfeature, rfeature;
-            CHECK_DIE(rewriter.rewrite(feature, &ufeature, &lfeature, &rfeature))
-            << "rewrite failed: " << feature;
-            const int lid = cid.lid(lfeature.c_str());
-            const int rid = cid.rid(rfeature.c_str());
-            CHECK_DIE(lid >= 0 && rid >= 0 && matrix.is_valid(lid, rid))
-            << "invalid ids are found lid=" << lid << " rid=" << rid;
-            escape_csv_element(&w);
-            ofs << w << ',' << lid << ',' << rid << ','
-                << cost << ',' << feature << '\n';
-        }
-    }
+    CHECK_FALSE(ptr == dmmap_->end())
+                << "dictionary file is broken: " << file;
 
     return true;
+}
+
+void Dictionary::close() {
+    dmmap_->close();
 }

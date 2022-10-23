@@ -63,6 +63,28 @@ bool Viterbi::open(const Param &param) {
     return true;
 }
 
+bool Viterbi::open2(const Param &param) {
+    tokenizer_.reset(new Tokenizer<Node, Path>);
+    CHECK_FALSE(tokenizer_->open2(param)) << tokenizer_->what();
+    CHECK_FALSE(tokenizer_->dictionary_info()) << "Dictionary is empty";
+
+    connector_.reset(new Connector);
+    CHECK_FALSE(connector_->open2(param)) << connector_->what();
+
+    CHECK_FALSE(tokenizer_->dictionary_info()->lsize ==
+                connector_->left_size() &&
+                tokenizer_->dictionary_info()->rsize ==
+                connector_->right_size())
+                << "Transition table and dictionary are not compatible";
+
+    cost_factor_ = param.get<int>("cost-factor");
+    if (cost_factor_ == 0) {
+        cost_factor_ = 800;
+    }
+
+    return true;
+}
+
 bool Viterbi::analyze(Lattice *lattice) const {
     if (!lattice || !lattice->sentence()) {
         return false;

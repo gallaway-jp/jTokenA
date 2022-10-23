@@ -27,6 +27,7 @@ public:
     typedef DoubleArray::result_pair_type result_type;
 
     bool open(const char *filename, const char *mode = "r");
+    bool open2(const char *filename, void *env, void* jAssetManager, const char *mode = "r");
     void close();
 
     size_t commonPrefixSearch(const char* key, size_t len,
@@ -62,12 +63,6 @@ public:
     }
     size_t token_size(const result_type &n) const { return 0xff & n.value; }
     const char  *feature(const Token &t) const { return feature_ + t.feature; }
-
-    static bool assignUserDictionaryCosts(
-            const Param &param,
-            const std::vector<std::string> &dics,
-            const char *output);  // outputs
-
 
     const char *what() { return what_.str(); }
 

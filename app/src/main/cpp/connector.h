@@ -24,6 +24,7 @@ private:
 public:
 
     bool open(const Param &param);
+    bool open2(const Param &param);
     void close();
     void clear() {}
 
@@ -50,6 +51,7 @@ public:
 
     bool openText(const char *filename);
     bool open(const char *filename, const char *mode = "r");
+    bool open2(const char *filename, void *env, void *jAssetManager);
 
     bool is_valid(size_t lid, size_t rid) const {
         return (lid >= 0 && lid < rsize_ && rid >= 0 && rid < lsize_);

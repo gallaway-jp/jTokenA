@@ -25,7 +25,9 @@ struct CharInfo {
 class CharProperty {
 public:
     bool open(const Param &);
+    bool open2(const Param &);
     bool open(const char*);
+    bool open2(const char *filename, void *env, void *jAssetManager);
     void close();
     size_t size() const;
     void set_charset(const char *charset);

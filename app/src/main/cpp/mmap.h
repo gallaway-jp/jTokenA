@@ -19,12 +19,10 @@
 #include "common.h"
 #include "utils.h"
 
+#include "asset.h"
+
 #ifndef O_BINARY
 #define O_BINARY 0
-#endif
-
-#ifndef HAVE_MMAP
-#define HAVE_MMAP 1
 #endif
 
 template <class T> class Mmap {
@@ -71,20 +69,32 @@ public:
         length = st.st_size;
 
         int prot = PROT_READ;
-    if (flag == O_RDWR) prot |= PROT_WRITE;
-    char *p;
-    CHECK_FALSE((p = reinterpret_cast<char *>
-                 (::mmap(0, length, prot, MAP_SHARED, fd, 0)))
-                != MAP_FAILED)
-        << "mmap() failed: " << filename;
+        if (flag == O_RDWR) prot |= PROT_WRITE;
+        char *p;
+        CHECK_FALSE((p = reinterpret_cast<char *>
+        (::mmap(0, length, prot, MAP_SHARED, fd, 0)))
+                    != MAP_FAILED)
+                    << "mmap() failed: " << filename;
 
-    text = reinterpret_cast<T *>(p);
+        text = reinterpret_cast<T *>(p);
         ::close(fd);
         fd = -1;
 
         return true;
     }
+    bool open2(const char *filename, void *env, void *jAssetManager) {
+        this->close();
 
+        char *p;
+        length = getAsset2(filename, env, jAssetManager, &p);
+        if(length == -1){
+            return false;
+        }
+
+        text = reinterpret_cast<T *>(p);
+
+        return true;
+    }
     void close() {
         if (fd >= 0) {
             ::close(fd);

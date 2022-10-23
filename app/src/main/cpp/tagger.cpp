@@ -72,8 +72,10 @@ public:
     virtual ~ModelImpl();
 
     bool open(int argc, char **argv);
+    bool open2(int argc, char **argv, void *env, void *jAssetManager);
     bool open(const char *arg);
     bool open(const Param &param);
+    bool open2(const Param &param);
 
     bool swap(Model *model);
 
@@ -145,6 +147,7 @@ private:
 class TaggerImpl: public Tagger {
 public:
     bool                  open(int argc, char **argv);
+    bool                  open2(int argc, char **argv, void *env, void *jAssetManager);
     bool                  open(const char *arg);
     bool                  open(const ModelImpl &model);
 
@@ -345,6 +348,16 @@ bool ModelImpl::open(int argc, char **argv) {
     return open(param);
 }
 
+bool ModelImpl::open2(int argc, char **argv, void *env, void *jAssetManager) {
+    Param param;
+    if (!param.open2(argc, argv, long_options, env, jAssetManager) ||
+        !load_dictionary_resource2(&param)) {
+        setGlobalError(param.what());
+        return false;
+    }
+    return open(param);
+}
+
 bool ModelImpl::open(const char *arg) {
     Param param;
     if (!param.open(arg, long_options) ||
@@ -356,7 +369,24 @@ bool ModelImpl::open(const char *arg) {
 }
 
 bool ModelImpl::open(const Param &param) {
-    if (!writer_->open(param) || !viterbi_->open(param)) {
+    if (!writer_->open(param) || !viterbi_->open2(param)) {
+        std::string error = viterbi_->what();
+        if (!error.empty()) {
+            error.append(" ");
+        }
+        error.append(writer_->what());
+        setGlobalError(error.c_str());
+        return false;
+    }
+
+    request_type_ = load_request_type(param);
+    theta_ = param.get<double>("theta");
+
+    return is_available();
+}
+
+bool ModelImpl::open2(const Param &param) {
+    if (!writer_->open(param) || !viterbi_->open2(param)) {
         std::string error = viterbi_->what();
         if (!error.empty()) {
             error.append(" ");
@@ -445,6 +475,18 @@ const char *TaggerImpl::what() const {
 bool TaggerImpl::open(int argc, char **argv) {
     model_.reset(new ModelImpl);
     if (!model_->open(argc, argv)) {
+        model_.reset(0);
+        return false;
+    }
+    current_model_ = model_.get();
+    request_type_ = model()->request_type();
+    theta_        = model()->theta();
+    return true;
+}
+
+bool TaggerImpl::open2(int argc, char **argv, void *env, void *jAssetManager) {
+    model_.reset(new ModelImpl);
+    if (!model_->open2(argc, argv, env, jAssetManager)) {
         model_.reset(0);
         return false;
     }
@@ -1032,6 +1074,15 @@ const char *Tagger::version() {
 Tagger *createTagger(int argc, char **argv) {
     TaggerImpl *tagger = new TaggerImpl();
     if (!tagger->open(argc, argv)) {
+        setGlobalError(tagger->what());
+        delete tagger;
+        return 0;
+    }
+    return (Tagger *)tagger;
+}
+Tagger *createTagger(int argc, char **argv, void *env, void *jAssetManager) {
+    TaggerImpl *tagger = new TaggerImpl();
+    if (!tagger->open2(argc, argv, env, jAssetManager)) {
         setGlobalError(tagger->what());
         delete tagger;
         return 0;

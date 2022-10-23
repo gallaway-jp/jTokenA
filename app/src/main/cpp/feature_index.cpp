@@ -108,6 +108,43 @@ bool FeatureIndex::openTemplate(const Param &param) {
     return true;
 }
 
+bool FeatureIndex::openTemplate2(const Param &param) {
+    std::string filename = create_filename(param.get<std::string>("dicdir"),
+                                           FEATURE_FILE);
+    std::stringbuf strBuf( getAsset(filename.c_str(), param.env, param.jAssetManager) );
+    std::istream ifs(&strBuf);
+    CHECK_DIE(ifs) << "no such file or directory: " << filename;
+
+    scoped_fixed_array<char, BUF_SIZE> buf;
+    char *column[4];
+
+    unigram_templs_.clear();
+    bigram_templs_.clear();
+
+    while (ifs.getline(buf.get(), buf.size())) {
+        if (buf[0] == '\0' || buf[0] == '#' || buf[0] == ' ') {
+            continue;
+        }
+        CHECK_DIE(tokenize2(buf.get(), "\t ", column, 2) == 2)
+        << "format error: " <<filename;
+
+        if (std::strcmp(column[0], "UNIGRAM") == 0) {
+            unigram_templs_.push_back(this->strdup(column[1]));
+        } else if (std::strcmp(column[0], "BIGRAM") == 0) {
+            bigram_templs_.push_back(this->strdup(column[1]));
+        } else {
+            CHECK_DIE(false) << "format error: " <<  filename;
+        }
+    }
+
+    // second, open rewrite rules
+    filename = create_filename(param.get<std::string>("dicdir"),
+                               REWRITE_FILE);
+    rewrite_.open2(filename.c_str(), param.env, param.jAssetManager);
+
+    return true;
+}
+
 bool EncoderFeatureIndex::open(const Param &param) {
     return openTemplate(param);
 }

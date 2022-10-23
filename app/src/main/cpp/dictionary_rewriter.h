@@ -48,6 +48,8 @@ private:
 public:
     bool open(const char *filename,
               Iconv *iconv = 0);
+    bool open2(const char *filename, void *env, void *jAssetManager,
+              Iconv *iconv = 0);
     void clear();
     bool rewrite(const std::string &feature,
                  std::string *ufeature,

@@ -60,6 +60,7 @@ protected:
     virtual int id(const char *key) = 0;
     const char* getIndex(char **, char **, size_t);
     bool openTemplate(const Param &param);
+    bool openTemplate2(const Param &param);
 };
 
 class EncoderFeatureIndex: public FeatureIndex {

@@ -9,6 +9,7 @@
 #include "param.h"
 #include "string_buffer.h"
 #include "utils.h"
+#include "asset.h"
 
 
 void init_param(std::string *help,
@@ -59,6 +60,31 @@ void Param::dump_config(std::ostream *os) const {
 
 bool Param::load(const char *filename) {
     std::ifstream ifs(WPATH(filename));
+
+    CHECK_FALSE(ifs) << "no such file or directory: " << filename;
+
+    std::string line;
+    while (std::getline(ifs, line)) {
+        if (!line.size() ||
+            (line.size() && (line[0] == ';' || line[0] == '#'))) continue;
+
+        size_t pos = line.find('=');
+        CHECK_FALSE(pos != std::string::npos) << "format error: " << line;
+
+        size_t s1, s2;
+        for (s1 = pos+1; s1 < line.size() && isspace(line[s1]); s1++);
+        for (s2 = pos-1; static_cast<long>(s2) >= 0 && isspace(line[s2]); s2--);
+        const std::string value = line.substr(s1, line.size() - s1);
+        const std::string key   = line.substr(0, s2 + 1);
+        set<std::string>(key.c_str(), value, false);
+    }
+
+    return true;
+}
+
+bool Param::load2(const char *filename, void *env, void *jAssetManager) {
+    std::stringbuf strBuf( getAsset(filename, env, jAssetManager) );
+    std::istream ifs(&strBuf);
 
     CHECK_FALSE(ifs) << "no such file or directory: " << filename;
 
@@ -176,6 +202,13 @@ bool Param::open(int argc, char **argv, const Option *opts) {
         case 2: WHAT << "`" << argv[ind] << "` doesn't allow an argument"; break;
     }
     return false;
+}
+
+bool Param::open2(int argc, char **argv, const Option *opts, void *env, void *jAssetManager) {
+    this->env = env;
+    this->jAssetManager = jAssetManager;
+
+    return open(argc, argv, opts);
 }
 
 void Param::clear() {

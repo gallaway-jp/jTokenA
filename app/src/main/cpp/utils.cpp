@@ -177,6 +177,25 @@ bool load_dictionary_resource(Param *param) {
     return true;
 }
 
+bool load_dictionary_resource2(Param *param) {
+    std::string rcfile = param->get<std::string>("rcfile");
+
+    std::string dicdir = param->get<std::string>("dicdir");
+    if (dicdir.empty()) {
+        dicdir = ".";  // current
+    }
+    remove_filename(&rcfile);
+    replace_string(&dicdir, "$(rcpath)", rcfile);
+    param->set<std::string>("dicdir", dicdir, true);
+    dicdir = create_filename(dicdir, DICRC);
+
+    if (!param->load2(dicdir.c_str(), param->env, param->jAssetManager)) {
+        return false;
+    }
+
+    return true;
+}
+
 // Copied from MurmurHash3.cpp
 // http://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
 //-----------------------------------------------------------------------------

@@ -44,8 +44,10 @@ private:
 
 public:
     bool open(int argc,  char **argv, const Option *opt);
+    bool open2(int argc, char **argv, const Option *opts, void *env, void *jAssetManager);
     bool open(const char *arg,  const Option *opt);
     bool load(const char *filename);
+    bool load2(const char *filename, void *env, void *jAssetManager);
     void clear();
     const std::vector<std::string>& rest_args() const { return rest_; }
 
@@ -54,6 +56,8 @@ public:
     const char* help() const { return help_.c_str(); }
     const char* version() const { return version_.c_str(); }
     int help_version() const;
+    void* jAssetManager;
+    void* env;
 
     template <class T>
     T get(const char *key) const {

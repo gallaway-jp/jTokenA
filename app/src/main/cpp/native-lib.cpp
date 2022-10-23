@@ -48,6 +48,47 @@ Tagger* jCreateTagger(JNIEnv *env, jstring jDicDir)
     return tagger;
 }
 
+Tagger* jCreateTagger2(JNIEnv *env, jstring jAssetsFolder, jobject jAssetManager)
+{
+    std::string arg = "";
+
+    const char *nativeDicdir = env->GetStringUTFChars(jAssetsFolder, NULL);
+    if(nativeDicdir == NULL){
+        return NULL;
+    }
+    std::string dicdir = nativeDicdir;
+    env->ReleaseStringUTFChars(jAssetsFolder, nativeDicdir);
+
+    std::string mecabrc = dicdir + "/" + "mecabrc";
+
+    std::string system = "mecab-android";
+    arg = system + " -r " + mecabrc + " -d " + dicdir + arg;
+
+    std::vector<std::string> strings;
+    std::istringstream f(arg);
+    std::string s;
+    while (getline(f, s, ' ')) {
+        std::cout << s << std::endl;
+        strings.push_back(s);
+    }
+    int argc = strings.size();
+    char** argv = (char**)malloc(argc * sizeof(char*));
+
+    if(!argv){
+        return NULL;
+    }
+
+    for(int i = 0; i<argc; i++){
+        const char *cstr = (strings.at(i).c_str());
+        argv[i] = (char *)cstr;
+    }
+
+    Tagger *tagger = createTagger(argc, argv, (void *)env, (void *)jAssetManager);
+
+    free(argv);
+    return tagger;
+}
+
 typedef struct _CLASSINFO{
     jclass featuresClass;
     jmethodID featuresID;
@@ -199,6 +240,44 @@ Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeTextAsNodes(JNIEnv *e
                                                                                jstring features_class_name,
                                                                                jint features_count) {
     Tagger *tagger = jCreateTagger(env, dic_dir);
+    if (!tagger) {
+        return NULL;
+    }
+
+    const char *nativeInput = env->GetStringUTFChars(text, NULL);
+    std::string input = nativeInput;
+    env->ReleaseStringUTFChars(text, nativeInput);
+
+    const Node *result = tagger->parseToNode(input.c_str());
+    if(!result){
+        return NULL;
+    }
+
+    CLASSINFO classInfo = getClassInfo(env, features_class_name, (int)features_count);
+    std::vector<jobject> nodes = createJNodesVector(env, (Node*)result, classInfo, features_count);
+
+    deleteTagger(tagger);
+
+    jobjectArray jArray = env->NewObjectArray(nodes.size(), classInfo.nodeClass , NULL);
+    if(!jArray){
+        return NULL;
+    }
+    for (size_t aI = 0; aI < nodes.size(); aI++) {
+        env->SetObjectArrayElement(jArray, aI, nodes[aI]);
+    }
+
+    return jArray;
+}
+
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeTextAsNodes2(JNIEnv *env, jclass clazz,
+                                                                        jstring text,
+                                                                        jstring assets_folder,
+                                                                        jstring features_class_name,
+                                                                        jint features_count,
+                                                                        jobject jAssetManager) {
+    Tagger *tagger = jCreateTagger2(env, assets_folder, jAssetManager);
     if (!tagger) {
         return NULL;
     }

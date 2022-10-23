@@ -52,6 +52,7 @@ template Node* Tokenizer<Node, Path>::lookup<true>(
         Allocator<Node, Path> *,
         Lattice *) const;
 template bool Tokenizer<Node, Path>::open(const Param &);
+template bool Tokenizer<Node, Path>::open2(const Param &);
 template Tokenizer<LearnerNode, LearnerPath>::Tokenizer();
 template void Tokenizer<LearnerNode, LearnerPath>::close();
 template const DictionaryInfo
@@ -104,6 +105,93 @@ bool Tokenizer<N, P>::open(const Param &param) {
 
     CHECK_FALSE(sysdic->open
             (create_filename(prefix, SYS_DIC_FILE).c_str()))
+                << sysdic->what();
+
+    CHECK_FALSE(sysdic->type() == 0)
+                << "not a system dictionary: " << prefix;
+
+    property_.set_charset(sysdic->charset());
+    dic_.push_back(sysdic);
+
+    const std::string userdic = param.template get<std::string>("userdic");
+    if (!userdic.empty()) {
+        scoped_fixed_array<char, BUF_SIZE> buf;
+        scoped_fixed_array<char *, BUF_SIZE> dicfile;
+        std::strncpy(buf.get(), userdic.c_str(), buf.size());
+        const size_t n = tokenizeCSV(buf.get(), dicfile.get(), dicfile.size());
+        for (size_t i = 0; i < n; ++i) {
+            Dictionary *d = new Dictionary;
+            CHECK_FALSE(d->open(dicfile[i])) << d->what();
+            CHECK_FALSE(d->type() == 1)
+                        << "not a user dictionary: " << dicfile[i];
+            CHECK_FALSE(sysdic->isCompatible(*d))
+                        << "incompatible dictionary: " << dicfile[i];
+            dic_.push_back(d);
+        }
+    }
+
+    dictionary_info_ = 0;
+    dictionary_info_freelist_.free();
+    for (int i = static_cast<int>(dic_.size() - 1); i >= 0; --i) {
+        DictionaryInfo *d = dictionary_info_freelist_.alloc();
+        d->next          = dictionary_info_;
+        d->filename      = dic_[i]->filename();
+        d->charset       = dic_[i]->charset();
+        d->size          = dic_[i]->size();
+        d->lsize         = dic_[i]->lsize();
+        d->rsize         = dic_[i]->rsize();
+        d->type          = dic_[i]->type();
+        d->version       = dic_[i]->version();
+        dictionary_info_ = d;
+    }
+
+    unk_tokens_.clear();
+    for (size_t i = 0; i < property_.size(); ++i) {
+        const char *key = property_.name(i);
+        const Dictionary::result_type n = unkdic_.exactMatchSearch(key);
+        CHECK_FALSE(n.value != -1) << "cannot find UNK category: " << key;
+        const Token *token = unkdic_.token(n);
+        size_t size = unkdic_.token_size(n);
+        unk_tokens_.push_back(std::make_pair(token, size));
+    }
+
+    space_ = property_.getCharInfo(0x20);  // ad-hoc
+
+    bos_feature_.reset_string(param.template get<std::string>("bos-feature"));
+
+    const std::string tmp = param.template get<std::string>("unk-feature");
+    unk_feature_.reset(0);
+    if (!tmp.empty()) {
+        unk_feature_.reset_string(tmp);
+    }
+
+    CHECK_FALSE(*bos_feature_ != '\0')
+                << "bos-feature is undefined in dicrc";
+
+    max_grouping_size_ = param.template get<size_t>("max-grouping-size");
+    if (max_grouping_size_ == 0) {
+        max_grouping_size_ = DEFAULT_MAX_GROUPING_SIZE;
+    }
+
+    return true;
+}
+
+template <typename N, typename P>
+bool Tokenizer<N, P>::open2(const Param &param) {
+    close();
+
+    const std::string prefix = param.template get<std::string>("dicdir");
+
+    CHECK_FALSE(unkdic_.open2(create_filename
+                                     (prefix, UNK_DIC_FILE).c_str()
+                                     , param.env, param.jAssetManager))
+                << unkdic_.what();
+    CHECK_FALSE(property_.open2(param)) << property_.what();
+
+    Dictionary *sysdic = new Dictionary;
+
+    CHECK_FALSE(sysdic->open2
+            (create_filename(prefix, SYS_DIC_FILE).c_str(), param.env, param.jAssetManager))
                 << sysdic->what();
 
     CHECK_FALSE(sysdic->type() == 0)

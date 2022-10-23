@@ -1005,6 +1005,8 @@ Model       *createModel(const char *arg);
  */
 Tagger      *createTagger(int argc, char **argv);
 
+Tagger *createTagger(int argc, char **argv, void *env, void *jAssetManager);
+
 /**
  * Alias of Tagger::create(arg)
  */

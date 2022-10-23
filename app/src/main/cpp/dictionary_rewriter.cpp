@@ -14,6 +14,7 @@
 #include "iconv_utils.h"
 #include "scoped_ptr.h"
 #include "utils.h"
+#include "asset.h"
 
 void append_rewrite_rule(RewriteRules *r, char* str) {
     char *col[3];
@@ -126,6 +127,35 @@ void DictionaryRewriter::clear() { cache_.clear(); }
 bool DictionaryRewriter::open(const char *filename,
                               Iconv *iconv) {
     std::ifstream ifs(WPATH(filename));
+    CHECK_DIE(ifs) << "no such file or directory: " << filename;
+    int append_to = 0;
+    std::string line;
+    while (std::getline(ifs, line)) {
+        if (iconv) iconv->convert(&line);
+        if (line.empty() || line[0] == '#') continue;
+        if (line == "[unigram rewrite]") {
+            append_to = 1;
+        } else if (line == "[left rewrite]") {
+            append_to = 2;
+        } else if (line == "[right rewrite]") {
+            append_to = 3;
+        } else {
+            CHECK_DIE(append_to != 0) << "no sections found";
+            char *str = const_cast<char *>(line.c_str());
+            switch (append_to) {
+                case 1: append_rewrite_rule(&unigram_rewrite_, str); break;
+                case 2: append_rewrite_rule(&left_rewrite_,    str); break;
+                case 3: append_rewrite_rule(&right_rewrite_,   str); break;
+            }
+        }
+    }
+    return true;
+}
+
+bool DictionaryRewriter::open2(const char *filename, void *env, void *jAssetManager,
+                              Iconv *iconv) {
+    std::stringbuf strBuf( getAsset(filename, env, jAssetManager) );
+    std::istream ifs(&strBuf);
     CHECK_DIE(ifs) << "no such file or directory: " << filename;
     int append_to = 0;
     std::string line;

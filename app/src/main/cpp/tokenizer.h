@@ -120,6 +120,7 @@ public:
                                         Allocator<N, P> *allocator,
                                         Lattice *lattice) const;
     bool open(const Param &param);
+    bool open2(const Param &param);
     void close();
 
     const DictionaryInfo *dictionary_info() const;

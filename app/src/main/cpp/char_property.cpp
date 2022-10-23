@@ -73,9 +73,40 @@ bool CharProperty::open(const Param &param) {
     return open(filename.c_str());
 }
 
+bool CharProperty::open2(const Param &param) {
+    const std::string prefix   = param.get<std::string>("dicdir");
+    const std::string filename = create_filename(prefix, CHAR_PROPERTY_FILE);
+    return open2(filename.c_str(), param.env, param.jAssetManager);
+}
+
 bool CharProperty::open(const char *filename) {
     std::ostringstream error;
     CHECK_FALSE(cmmap_->open(filename, "r"));
+
+    const char *ptr = cmmap_->begin();
+    unsigned int csize;
+    read_static<unsigned int>(&ptr, csize);
+
+    size_t fsize = sizeof(unsigned int) +
+                   (32 * csize) + sizeof(unsigned int) * 0xffff;
+
+    CHECK_FALSE(fsize == cmmap_->size())
+                << "invalid file size: " << filename;
+
+    clist_.clear();
+    for (unsigned int i = 0; i < csize; ++i) {
+        const char *s = read_ptr(&ptr, 32);
+        clist_.push_back(s);
+    }
+
+    map_ = reinterpret_cast<const CharInfo *>(ptr);
+
+    return true;
+}
+
+bool CharProperty::open2(const char *filename, void *env, void *jAssetManager) {
+    std::ostringstream error;
+    CHECK_FALSE(cmmap_->open2(filename, env, jAssetManager));
 
     const char *ptr = cmmap_->begin();
     unsigned int csize;

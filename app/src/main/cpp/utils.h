@@ -85,6 +85,8 @@ int load_request_type(const Param &param);
 
 bool load_dictionary_resource(Param *);
 
+bool load_dictionary_resource2(Param *);
+
 bool escape_csv_element(std::string *w);
 
 int  progress_bar(const char* message, size_t current, size_t total);

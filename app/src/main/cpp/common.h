@@ -20,14 +20,10 @@
 
 #define SYS_DIC_FILE            "sys.dic"
 #define UNK_DIC_FILE            "unk.dic"
-#define MATRIX_DEF_FILE         "matrix.def"
 #define MATRIX_FILE             "matrix.bin"
 #define CHAR_PROPERTY_FILE      "char.bin"
 #define FEATURE_FILE            "feature.def"
 #define REWRITE_FILE            "rewrite.def"
-#define LEFT_ID_FILE            "left-id.def"
-#define RIGHT_ID_FILE           "right-id.def"
-#define POS_ID_FILE             "pos-id.def"
 #define DICRC                   "dicrc"
 #define BOS_KEY                 "BOS/EOS"
 

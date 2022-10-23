@@ -20,6 +20,7 @@ template <typename N, typename P> class Tokenizer;
 class Viterbi {
 public:
     bool open(const Param &param);
+    bool open2(const Param &param);
 
     bool analyze(Lattice *lattice) const;
 
