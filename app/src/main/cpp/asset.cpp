@@ -30,7 +30,7 @@ std::string getAsset(const char *assetFile, void *env, void *jAssetManager){
     return getAsset_(assetFile, (JNIEnv *)env, (jobject)jAssetManager);
 }
 
-#define MAX_ASSET_BUFFER_SIZE (128*1024*1024) //64MB max size
+#define MAX_ASSET_BUFFER_SIZE (128*1024*1024) //128MB max size
 
 int64_t getAsset2_(const char *assetFile, JNIEnv *env, jobject jAssetManager, char **ppMmap) {
     if(!ppMmap){
