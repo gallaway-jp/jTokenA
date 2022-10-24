@@ -306,3 +306,29 @@ Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeTextAsNodes2(JNIEnv *
 
     return jArray;
 }
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeText2(JNIEnv *env, jclass clazz,
+                                                                 jstring text,
+                                                                 jstring assets_folder,
+                                                                 jstring features_class_name,
+                                                                 jint features_count,
+                                                                 jobject asset_manager) {
+    Tagger *tagger = jCreateTagger2(env, assets_folder, asset_manager);
+    if (!tagger) {
+        return NULL;
+    }
+
+    const char *nativeInput = env->GetStringUTFChars(text, NULL);
+    std::string input = nativeInput;
+    env->ReleaseStringUTFChars(text, nativeInput);
+
+    const char *result = tagger->parse(input.c_str(), input.length());
+
+    deleteTagger(tagger);
+
+    if(result){
+        return env->NewStringUTF(result);
+    }
+    return NULL;
+}

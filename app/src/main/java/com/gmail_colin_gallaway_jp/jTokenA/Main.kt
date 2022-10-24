@@ -10,6 +10,8 @@ import java.lang.System.loadLibrary
  * which is packaged with this application.
  */
 external fun tokenizeText(text: String, dicDir: String, featuresClassName: String, featuresCount: Int): String
+external fun tokenizeText2(text: String, assetsFolder: String, featuresClassName: String, featuresCount: Int, assetManager: AssetManager): String
+
 external fun tokenizeTextAsNodes(text: String, dicDir: String, featuresClassName: String, featuresCount: Int): Object
 external fun tokenizeTextAsNodes2(text: String, assetsFolder: String, featuresClassName: String, featuresCount: Int, assetManager: AssetManager): Object
 
@@ -37,6 +39,19 @@ fun tokenizeAsString(input: String, dicDir: String,
     val className = features::class.java.name.replace('.','/')
 
     return tokenizeText(input, dicDir, className, featuresCount)
+}
+
+fun tokenizeAsString2(input: String, assetsFolder: String, assetManager: AssetManager,
+                     features: Features = Unidic29Features()): String
+{
+    if(!loadMecab()){
+        return ""
+    }
+
+    val featuresCount = features::class.java.declaredFields.size
+    val className = features::class.java.name.replace('.','/')
+
+    return tokenizeText2(input, assetsFolder, className, featuresCount, assetManager)
 }
 
 fun tokenizeAsNodes(input: String, dicDir: String,
