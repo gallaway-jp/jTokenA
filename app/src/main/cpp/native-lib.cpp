@@ -7,6 +7,8 @@
 #include <vector>
 #include <fstream>
 
+
+
 Tagger* jCreateTagger(JNIEnv *env, jstring jDicDir)
 {
     std::string arg = "";
@@ -206,115 +208,26 @@ CLASSINFO getClassInfo(JNIEnv *env, jstring jfeaturesClassName, int featuresCoun
 }
 
 extern "C"
-JNIEXPORT jstring JNICALL
-Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeText(JNIEnv *env, jclass thiz,
-                                                                        jstring text,
-                                                                        jstring dic_dir,
-                                                                        jstring features_class_name,
-                                                                        jint features_count) {
+JNIEXPORT jlong JNICALL
+Java_com_gmail_1colin_1gallaway_1jp_jTokenA_TaggerKt_createTagger(JNIEnv *env, jclass clazz,
+                                                                  jstring dic_dir) {
     Tagger *tagger = jCreateTagger(env, dic_dir);
-    if (!tagger) {
-        return NULL;
-    }
-
-    const char *nativeInput = env->GetStringUTFChars(text, NULL);
-    std::string input = nativeInput;
-    env->ReleaseStringUTFChars(text, nativeInput);
-
-    const char *result = tagger->parse(input.c_str(), input.length());
-
-    deleteTagger(tagger);
-
-    if(result){
-        return env->NewStringUTF(result);
-    }
-    return NULL;
-}
-#include <syslog.h>
-extern "C"
-JNIEXPORT jobject JNICALL
-Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeTextAsNodes(JNIEnv *env,
-                                                                       jclass thiz,
-                                                                               jstring text,
-                                                                               jstring dic_dir,
-                                                                               jstring features_class_name,
-                                                                               jint features_count) {
-    Tagger *tagger = jCreateTagger(env, dic_dir);
-    if (!tagger) {
-        return NULL;
-    }
-
-    const char *nativeInput = env->GetStringUTFChars(text, NULL);
-    std::string input = nativeInput;
-    env->ReleaseStringUTFChars(text, nativeInput);
-
-    const Node *result = tagger->parseToNode(input.c_str());
-    if(!result){
-        return NULL;
-    }
-
-    CLASSINFO classInfo = getClassInfo(env, features_class_name, (int)features_count);
-    std::vector<jobject> nodes = createJNodesVector(env, (Node*)result, classInfo, features_count);
-
-    deleteTagger(tagger);
-
-    jobjectArray jArray = env->NewObjectArray(nodes.size(), classInfo.nodeClass , NULL);
-    if(!jArray){
-        return NULL;
-    }
-    for (size_t aI = 0; aI < nodes.size(); aI++) {
-        env->SetObjectArrayElement(jArray, aI, nodes[aI]);
-    }
-
-    return jArray;
-}
-
-extern "C"
-JNIEXPORT jobject JNICALL
-Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeTextAsNodes2(JNIEnv *env, jclass clazz,
-                                                                        jstring text,
-                                                                        jstring assets_folder,
-                                                                        jstring features_class_name,
-                                                                        jint features_count,
-                                                                        jobject jAssetManager) {
-    Tagger *tagger = jCreateTagger2(env, assets_folder, jAssetManager);
-    if (!tagger) {
-        return NULL;
-    }
-
-    const char *nativeInput = env->GetStringUTFChars(text, NULL);
-    std::string input = nativeInput;
-    env->ReleaseStringUTFChars(text, nativeInput);
-
-    const Node *result = tagger->parseToNode(input.c_str());
-    if(!result){
-        return NULL;
-    }
-
-    CLASSINFO classInfo = getClassInfo(env, features_class_name, (int)features_count);
-    std::vector<jobject> nodes = createJNodesVector(env, (Node*)result, classInfo, features_count);
-
-    deleteTagger(tagger);
-
-    jobjectArray jArray = env->NewObjectArray(nodes.size(), classInfo.nodeClass , NULL);
-    if(!jArray){
-        return NULL;
-    }
-    for (size_t aI = 0; aI < nodes.size(); aI++) {
-        env->SetObjectArrayElement(jArray, aI, nodes[aI]);
-    }
-
-    return jArray;
+    return reinterpret_cast<jlong>(tagger);
 }
 extern "C"
-JNIEXPORT jstring JNICALL
-Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeText2(JNIEnv *env, jclass clazz,
-                                                                 jstring text,
-                                                                 jstring assets_folder,
-                                                                 jstring features_class_name,
-                                                                 jint features_count,
-                                                                 jobject asset_manager) {
+JNIEXPORT jlong JNICALL
+Java_com_gmail_1colin_1gallaway_1jp_jTokenA_TaggerKt_createTagger2(JNIEnv *env, jclass clazz,
+                                                                   jstring assets_folder,
+                                                                   jobject asset_manager) {
     Tagger *tagger = jCreateTagger2(env, assets_folder, asset_manager);
+    return reinterpret_cast<jlong>(tagger);
+}
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_gmail_1colin_1gallaway_1jp_jTokenA_TaggerKt_tokenizeTextAsString(JNIEnv *env, jclass clazz,
+                                                                          jlong tagger,
+                                                                          jstring text) {
+    Tagger *pTagger = reinterpret_cast<Tagger *>(tagger);
     if (!tagger) {
         return NULL;
     }
@@ -323,12 +236,50 @@ Java_com_gmail_1colin_1gallaway_1jp_jTokenA_MainKt_tokenizeText2(JNIEnv *env, jc
     std::string input = nativeInput;
     env->ReleaseStringUTFChars(text, nativeInput);
 
-    const char *result = tagger->parse(input.c_str(), input.length());
+    const char *result = pTagger->parse(input.c_str(), input.length());
 
-    deleteTagger(tagger);
-
-    if(result){
-        return env->NewStringUTF(result);
+    if(!result){
+        return NULL;
     }
-    return NULL;
+    return env->NewStringUTF(result);
+}
+extern "C"
+JNIEXPORT jobjectArray JNICALL
+Java_com_gmail_1colin_1gallaway_1jp_jTokenA_TaggerKt_tokenizeTextAsNodes(JNIEnv *env, jclass clazz,
+                                                                         jlong tagger,
+                                                                         jstring text,
+                                                                         jstring features_class_name,
+                                                                         jint features_count) {
+    Tagger *pTagger = reinterpret_cast<Tagger *>(tagger);
+    if (!tagger) {
+        return NULL;
+    }
+
+    const char *nativeInput = env->GetStringUTFChars(text, NULL);
+    std::string input = nativeInput;
+    env->ReleaseStringUTFChars(text, nativeInput);
+
+    const Node *result = pTagger->parseToNode(input.c_str());
+    if(!result){
+        return NULL;
+    }
+
+    CLASSINFO classInfo = getClassInfo(env, features_class_name, (int)features_count);
+    std::vector<jobject> nodes = createJNodesVector(env, (Node*)result, classInfo, features_count);
+
+    jobjectArray jArray = env->NewObjectArray(nodes.size(), classInfo.nodeClass , NULL);
+    if(!jArray){
+        return NULL;
+    }
+    for (size_t aI = 0; aI < nodes.size(); aI++) {
+        env->SetObjectArrayElement(jArray, aI, nodes[aI]);
+    }
+
+    return jArray;
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_gmail_1colin_1gallaway_1jp_jTokenA_TaggerKt_deleteTagger(JNIEnv *env, jclass clazz,
+                                                                  jlong tagger) {
+    deleteTagger(reinterpret_cast<Tagger *>(tagger));
 }
